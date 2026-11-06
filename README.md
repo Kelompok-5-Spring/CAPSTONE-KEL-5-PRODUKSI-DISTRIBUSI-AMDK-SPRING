@@ -1,4 +1,4 @@
-<img width="90" height="38" alt="Spring Logo with Swirl Emblem (2)" src="https://github.com/user-attachments/assets/b5b29eb6-7cdf-498b-b65e-988e3e4a2a66" />  
+<img width="1934" height="813" alt="Spring Logo with Swirl Emblem" src="https://github.com/user-attachments/assets/98f6ba8f-8b3c-4fa4-bf18-7b1417e88da8" />  
 
 # PROJECT SPRING
 ## SISTEM INFORMASI MANAJEMEN PRODUKSI & DISTRIBUSI AIR MINUM KEMASAN SPRING  
