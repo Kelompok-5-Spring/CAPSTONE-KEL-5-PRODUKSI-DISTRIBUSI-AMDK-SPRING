@@ -1,4 +1,4 @@
-<img width="1934" height="813" alt="Spring Logo with Swirl Emblem" src="https://github.com/user-attachments/assets/98f6ba8f-8b3c-4fa4-bf18-7b1417e88da8" />  
+<img width="1599" height="672" alt="Gemini_Generated_Image_ck82wzck82wzck82" src="https://github.com/user-attachments/assets/62f19c4e-9c52-442d-89f1-bb5efcc57212" />
 
 # PROJECT SPRING
 ## SISTEM INFORMASI MANAJEMEN PRODUKSI & DISTRIBUSI AIR MINUM KEMASAN SPRING  
