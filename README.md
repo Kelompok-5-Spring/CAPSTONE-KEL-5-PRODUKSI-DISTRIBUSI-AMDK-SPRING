@@ -1,4 +1,4 @@
-<img width="1559" height="963" alt="WhatsApp Image 2026-10-15 at 21 57 19" src="https://github.com/user-attachments/assets/03166efa-e605-4a34-85e0-9bf47decde99" />
+<img width="90" height="38" alt="Spring Logo with Swirl Emblem (2)" src="https://github.com/user-attachments/assets/b5b29eb6-7cdf-498b-b65e-988e3e4a2a66" />  
 
 # PROJECT SPRING
 ## SISTEM INFORMASI MANAJEMEN PRODUKSI & DISTRIBUSI AIR MINUM KEMASAN SPRING  
