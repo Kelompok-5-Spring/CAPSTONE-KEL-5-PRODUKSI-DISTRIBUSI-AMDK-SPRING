@@ -1,4 +1,5 @@
-<img width="1599" height="672" alt="Gemini_Generated_Image_ck82wzck82wzck82" src="https://github.com/user-attachments/assets/62f19c4e-9c52-442d-89f1-bb5efcc57212" />
+<img width="1920" height="1080" alt="- Cover - Anggota Kelompok - Latar Belakang   Identifikasi Masalah - Usulan Solusi   Relevansi terhadap SDGs - Tech Stack yang digunakan - Arsitektur Database (ERD Logical   Relational) - Use Case, Tabel Hak Akses, dan " src="https://github.com/user-attachments/assets/bfd8e60d-4aa9-46f3-a041-606b82b712ef" />
+
 
 # PROJECT SPRING
 ## SISTEM INFORMASI MANAJEMEN PRODUKSI & DISTRIBUSI AIR MINUM KEMASAN SPRING  
