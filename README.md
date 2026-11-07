@@ -67,13 +67,11 @@ Sistem menyediakan fitur pengelolaan data menggunakan operasi CRUD (Create, Read
 
 Pengembangan Project SPRING mendukung dua tujuan pembangunan berkelanjutan.
 
-### 1. SDG 6: Clean Water and Sanitation  
-<img width="175" height="175" alt="images" src="https://github.com/user-attachments/assets/2aa98891-771a-4572-8a43-a48c075d2d64" />
+### 1. SDG 6: Clean Water and Sanitation
 
 Sistem mendukung pengelolaan informasi produksi dan distribusi air minum kemasan secara terstruktur. Pencatatan volume produksi dan penyaluran produk membantu perusahaan memantau proses distribusi serta mengelola informasi operasional dengan lebih baik.
 
-### 2. SDG 8: Decent Work and Economic Growth  
-<img width="175" height="175" alt="images (1)" src="https://github.com/user-attachments/assets/63000963-040b-41f6-84ec-c6a4bb4ad901" />
+### 2. SDG 8: Decent Work and Economic Growth
 
 Digitalisasi pencatatan membantu mengurangi pekerjaan administratif manual, meminimalkan kesalahan manusia, dan meningkatkan efisiensi pengelolaan data. Pembagian hak akses juga membantu setiap petugas menjalankan tugas sesuai tanggung jawabnya.
 
