@@ -211,23 +211,44 @@ public class ProdukJdbcDAO implements ProdukDAO {
     }
 
     static void buatProdukDariProduksi(Connection c, Produksi produksi) throws SQLException {
-        String nama = produksi.getJenisProduksi();
-        String sqlRef = "SELECT p.harga_satuan, pb.volume_ml, pb.pcs_per_dus, pg.volume_liter, pg.jenis_galon "
-                + "FROM produk p LEFT JOIN produk_botol pb ON pb.id_produk = p.id_produk "
+        JenisProduk jenis = null;
+        for (JenisProduk kandidat : JenisProduk.values()) {
+            if (kandidat.getNamaProduk().equalsIgnoreCase(produksi.getJenisProduksi())) {
+                jenis = kandidat;
+                break;
+            }
+        }
+        if (jenis == null) {
+            throw new IllegalArgumentException("Jenis produksi tidak memiliki spesifikasi produk yang dikenal.");
+        }
+
+        // Ambil harga dan detail kemasan berdasarkan volume, bukan nama.
+        // Dengan demikian, perubahan nama pada satu record produk tidak
+        // memutus proses pembentukan stok dari produksi berikutnya.
+        String sqlRef = "SELECT p.harga_satuan, pb.volume_ml, pb.pcs_per_dus, "
+                + "pg.volume_liter, pg.jenis_galon "
+                + "FROM produk p "
+                + "LEFT JOIN produk_botol pb ON pb.id_produk = p.id_produk "
                 + "LEFT JOIN produk_galon pg ON pg.id_produk = p.id_produk "
-                + "WHERE p.nama_produk = ? LIMIT 1";
+                + "WHERE (pb.volume_ml = ? AND pb.id_produk IS NOT NULL) "
+                + "OR (pg.volume_liter = ? AND pg.id_produk IS NOT NULL) "
+                + "ORDER BY p.id_produk LIMIT 1";
+
         BigDecimal harga;
         BigDecimal volume;
         int pcs = 0;
         String jenisGalon = null;
-        boolean botol;
         try (PreparedStatement ps = c.prepareStatement(sqlRef)) {
-            ps.setString(1, nama);
+            BigDecimal volumeJenis = BigDecimal.valueOf(jenis.getVolume());
+            ps.setBigDecimal(1, volumeJenis);
+            ps.setBigDecimal(2, volumeJenis);
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) throw new IllegalStateException("Belum ada data referensi harga dan kemasan untuk " + nama + ". Tambahkan satu produk contoh terlebih dahulu.");
+                if (!rs.next()) {
+                    throw new IllegalStateException("Belum ada produk referensi untuk "
+                            + jenis.getNamaProduk() + ". Tambahkan satu data produk dengan detail kemasan yang sesuai.");
+                }
                 harga = rs.getBigDecimal("harga_satuan");
-                botol = rs.getBigDecimal("volume_ml") != null;
-                if (botol) {
+                if (jenis.isBotol()) {
                     volume = rs.getBigDecimal("volume_ml");
                     pcs = rs.getInt("pcs_per_dus");
                 } else {
@@ -240,9 +261,11 @@ public class ProdukJdbcDAO implements ProdukDAO {
         int nextNumber = nextProductNumber(c);
         for (int i = 0; i < produksi.getJumlahProduksi(); i++) {
             String id = String.format("PDK%03d", nextNumber++);
-            Produk produk = botol
-                    ? new ProdukBotol(id, nama, harga, produksi.getIdProduksi(), null, volume, pcs)
-                    : new ProdukGalon(id, nama, harga, produksi.getIdProduksi(), null, volume, jenisGalon);
+            Produk produk = jenis.isBotol()
+                    ? new ProdukBotol(id, jenis.getNamaProduk(), harga,
+                            produksi.getIdProduksi(), null, volume, pcs)
+                    : new ProdukGalon(id, jenis.getNamaProduk(), harga,
+                            produksi.getIdProduksi(), null, volume, jenisGalon);
             insertProduk(c, produk);
         }
     }

@@ -33,6 +33,7 @@ public class AdminDashboardForm extends javax.swing.JFrame {
         this.sistemController = sistemController;
         this.akunController = sistemController.getAkunController();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel6.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()
                 + ". Pantau produksi, stok, dan distribusi perusahaan.");
         jLabel17.setText("Ringkasan operasional tujuh hari terakhir.");

@@ -18,6 +18,8 @@ public class ManajemenProduksiForm extends javax.swing.JFrame {
 
     public ManajemenProduksiForm() {
         initComponents();
+        KalenderTanggal.pasang(jTextField4);
+        KalenderTanggal.pasang(jTextField5);
     }
 
     public ManajemenProduksiForm(controller.SistemController sistemController) {
@@ -35,6 +37,7 @@ public class ManajemenProduksiForm extends javax.swing.JFrame {
         model.type.Role role = akunController.getPetugasAktif().getRole();
 
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel36.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()
                 + ". Catat dan pantau hasil produksi sesuai hak akses.");
         jTextField3.setText("");
@@ -210,6 +213,9 @@ public class ManajemenProduksiForm extends javax.swing.JFrame {
                 }
             }
             jTable2.setModel(m);
+            jLabel16.setText(m.getRowCount() == 0
+                    ? "Tidak ada baris data produksi yang sesuai dengan pencarian atau filter."
+                    : "Data Produksi (" + m.getRowCount() + " transaksi)");
         } catch (RuntimeException ex) { ViewHelper.error(this, ex); }
     }
 

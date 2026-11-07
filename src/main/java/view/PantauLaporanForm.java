@@ -30,23 +30,29 @@ public class PantauLaporanForm extends javax.swing.JFrame {
         }
         this.sistemController = sistemController;
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jTextField1.setText(java.time.LocalDate.now().toString());
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(
                 new String[]{"Minggu", "Bulan", "Tahun"}));
         jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(
                 new String[]{"Gabungan", "Produksi", "Distribusi"}));
-        jComboBox3.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Semua Data"}));
-        jComboBox3.setEnabled(false);
+        jComboBox3.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
+            "Semua Produk", "Spring Botol 600ml", "Spring Botol 1500ml",
+            "Spring Galon 5L", "Spring Galon 19L"}));
+        jComboBox3.setEnabled(true);
+        jComboBox4.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
+            "Semua Status", "Dalam Pengiriman", "Terkirim", "Tidak Terkirim"}));
+        siapkanFilterLaporan();
 
         ViewHelper.pasangTombol(jButton1, e -> ViewHelper.bukaDashboard(this, sistemController));
         ViewHelper.pasangTombol(jButton8, e -> tampilkanTabelLaporan());
         ViewHelper.pasangTombol(jButton10, e -> ViewHelper.logout(this, sistemController));
         ViewHelper.pasangTombol(jButton2, e -> tampilkanLaporan());
-        ViewHelper.tambahTombolKembali(jPanel1, this, sistemController, 210);
-
         jTextField1.addActionListener(e -> tampilkanTabelLaporan());
         jComboBox1.addActionListener(e -> tampilkanTabelLaporan());
         jComboBox2.addActionListener(e -> tampilkanTabelLaporan());
+        jComboBox3.addActionListener(e -> tampilkanTabelLaporan());
+        jComboBox4.addActionListener(e -> tampilkanTabelLaporan());
         tampilkanTabelLaporan();
     }
 
@@ -73,23 +79,8 @@ public class PantauLaporanForm extends javax.swing.JFrame {
     }
 
     private void tampilkanLaporan() {
-        try {
-            java.time.LocalDate[] range = rentangLaporan();
-            String jenis = String.valueOf(jComboBox2.getSelectedItem());
-            String laporan;
-            if ("Produksi".equalsIgnoreCase(jenis)) {
-                laporan = sistemController.getLaporanController().buatLaporanProduksi(range[0], range[1]);
-            } else if ("Distribusi".equalsIgnoreCase(jenis)) {
-                laporan = sistemController.getLaporanController().buatLaporanDistribusi(range[0], range[1]);
-            } else {
-                laporan = sistemController.getLaporanController().buatLaporanPeriode(
-                        ViewHelper.tanggal(jTextField1.getText()),
-                        String.valueOf(jComboBox1.getSelectedItem()));
-            }
-            tampilkanTabelLaporan();
-            javax.swing.JOptionPane.showMessageDialog(this, laporan,
-                    "Laporan SPRING", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        } catch (RuntimeException ex) { ViewHelper.error(this, ex); }
+        // Hasil laporan ditampilkan langsung pada tabel, tanpa pop-up yang menutupi data.
+        tampilkanTabelLaporan();
     }
 
     private void tampilkanTabelLaporan() {
@@ -97,11 +88,15 @@ public class PantauLaporanForm extends javax.swing.JFrame {
         try {
             java.time.LocalDate[] range = rentangLaporan();
             model.type.Role role = sistemController.getAkunController().getPetugasAktif().getRole();
-            java.util.List<model.Produk> produk = sistemController.getProdukController().loadProduk();
+            String jenisLaporan = String.valueOf(jComboBox2.getSelectedItem());
+            String produkFilter = String.valueOf(jComboBox3.getSelectedItem());
+            String statusFilter = String.valueOf(jComboBox4.getSelectedItem());
+
             java.util.List<model.Produksi> produksi = new java.util.ArrayList<>();
-            if (role != model.type.Role.Distribusi) {
+            if (role != model.type.Role.Distribusi && !"Distribusi".equalsIgnoreCase(jenisLaporan)) {
                 produksi = sistemController.getProduksiController().getProduksiByTanggal(range[0], range[1]);
             }
+
             java.util.Map<model.type.JenisProduk, Integer> hasilProduksi =
                     new java.util.EnumMap<>(model.type.JenisProduk.class);
             java.util.Map<model.type.JenisProduk, Integer> barangKeluar =
@@ -110,11 +105,15 @@ public class PantauLaporanForm extends javax.swing.JFrame {
                 hasilProduksi.put(jenis, 0);
                 barangKeluar.put(jenis, 0);
             }
+
+            int jumlahProduksiCocok = 0;
             for (model.Produksi p : produksi) {
-                if (p.getStatusProduksi() == model.type.StatusProduksi.Selesai) {
-                    model.type.JenisProduk jenis = jenisDariNama(p.getJenisProduksi());
-                    hasilProduksi.put(jenis, hasilProduksi.get(jenis) + p.getJumlahProduksi());
-                }
+                if (p.getStatusProduksi() != model.type.StatusProduksi.Selesai) continue;
+                model.type.JenisProduk jenis = jenisDariNama(p.getJenisProduksi());
+                if (!"Semua Produk".equals(produkFilter)
+                        && !jenis.getNamaProduk().equalsIgnoreCase(produkFilter)) continue;
+                hasilProduksi.put(jenis, hasilProduksi.get(jenis) + p.getJumlahProduksi());
+                jumlahProduksiCocok++;
             }
 
             javax.swing.table.DefaultTableModel m1 = new javax.swing.table.DefaultTableModel(
@@ -122,56 +121,106 @@ public class PantauLaporanForm extends javax.swing.JFrame {
                         "Stok Tersedia", "Status"}, 0) {
                 @Override public boolean isCellEditable(int r, int c) { return false; }
             };
-            java.util.List<model.Distribusi> distribusiList = new java.util.ArrayList<>();
-            if (role != model.type.Role.Produksi) {
-                distribusiList = sistemController.getDistribusiController().loadDistribusi();
-            }
-            for (model.Distribusi d : distribusiList) {
-                if (d.getTanggalKirim().isBefore(range[0]) || d.getTanggalKirim().isAfter(range[1])) continue;
-                if (d.getStatusKirim() == model.type.StatusKirim.TERKIRIM) {
-                    for (model.DetailDistribusi detail : sistemController.getDistribusiController()
-                            .loadDetailDistribusi(d.getIdDistribusi())) {
-                        barangKeluar.put(detail.getJenisProduk(),
-                                barangKeluar.get(detail.getJenisProduk()) + detail.getJumlahPesan());
-                    }
-                }
-            }
-            for (model.type.JenisProduk jenis : model.type.JenisProduk.values()) {
-                int tersedia = sistemController.getProdukController().hitungStokTersedia(jenis);
-                Object produksiCell = role == model.type.Role.Distribusi ? "—" : hasilProduksi.get(jenis);
-                Object keluarCell = role == model.type.Role.Produksi ? "—" : barangKeluar.get(jenis);
-                m1.addRow(new Object[]{jenis.getNamaProduk(), "—", produksiCell,
-                    keluarCell, tersedia, tersedia == 0 ? "Kosong" : "Tersedia"});
-            }
-            jTable1.setModel(m1);
-
             javax.swing.table.DefaultTableModel m2 = new javax.swing.table.DefaultTableModel(
                     new Object[]{"Agen", "Produk", "Jumlah", "Status"}, 0) {
                 @Override public boolean isCellEditable(int r, int c) { return false; }
             };
-            for (model.Distribusi d : distribusiList) {
-                if (d.getTanggalKirim().isBefore(range[0]) || d.getTanggalKirim().isAfter(range[1])) continue;
-                for (model.DetailDistribusi detail : sistemController.getDistribusiController()
-                        .loadDetailDistribusi(d.getIdDistribusi())) {
-                    model.Agen agen = sistemController.getAgenController().cariAgen(detail.getIdAgen());
-                    m2.addRow(new Object[]{
-                        agen == null ? detail.getIdAgen() : agen.getNamaAgen(),
-                        detail.getJenisProduk().getNamaProduk(), detail.getJumlahPesan(),
-                        d.getStatusKirim().getNilaiDatabase()});
+
+            int jumlahRincianDistribusi = 0;
+            if (role != model.type.Role.Produksi && !"Produksi".equalsIgnoreCase(jenisLaporan)) {
+                for (model.Distribusi d : sistemController.getDistribusiController().loadDistribusi()) {
+                    if (d.getTanggalKirim().isBefore(range[0]) || d.getTanggalKirim().isAfter(range[1])) continue;
+                    String status = d.getStatusKirim().getNilaiDatabase();
+                    if (!"Semua Status".equals(statusFilter)
+                            && !status.equalsIgnoreCase(statusFilter)) continue;
+
+                    for (model.DetailDistribusi detail : sistemController.getDistribusiController()
+                            .loadDetailDistribusi(d.getIdDistribusi())) {
+                        String namaProduk = detail.getJenisProduk().getNamaProduk();
+                        if (!"Semua Produk".equals(produkFilter)
+                                && !namaProduk.equalsIgnoreCase(produkFilter)) continue;
+
+                        model.Agen agen = sistemController.getAgenController().cariAgen(detail.getIdAgen());
+                        m2.addRow(new Object[]{
+                            agen == null ? detail.getIdAgen() : agen.getNamaAgen(),
+                            namaProduk, detail.getJumlahPesan(), status});
+                        jumlahRincianDistribusi++;
+
+                        if (d.getStatusKirim() == model.type.StatusKirim.TERKIRIM) {
+                            barangKeluar.put(detail.getJenisProduk(),
+                                    barangKeluar.get(detail.getJenisProduk()) + detail.getJumlahPesan());
+                        }
+                    }
                 }
             }
+
+            for (model.type.JenisProduk jenis : model.type.JenisProduk.values()) {
+                if (!"Semua Produk".equals(produkFilter)
+                        && !jenis.getNamaProduk().equalsIgnoreCase(produkFilter)) continue;
+                int tersedia = sistemController.getProdukController().hitungStokTersedia(jenis);
+                Object produksiCell = role == model.type.Role.Distribusi
+                        || "Distribusi".equalsIgnoreCase(jenisLaporan) ? "—" : hasilProduksi.get(jenis);
+                Object keluarCell = role == model.type.Role.Produksi
+                        || "Produksi".equalsIgnoreCase(jenisLaporan) ? "—" : barangKeluar.get(jenis);
+                m1.addRow(new Object[]{jenis.getNamaProduk(), "—", produksiCell,
+                    keluarCell, tersedia, tersedia == 0 ? "Kosong" : "Tersedia"});
+            }
+
+            jTable1.setModel(m1);
             jTable2.setModel(m2);
-            String jenisTampilan = String.valueOf(jComboBox2.getSelectedItem());
-            jPanel14.setVisible(role != model.type.Role.Produksi
-                    && !"Produksi".equalsIgnoreCase(jenisTampilan));
+            boolean tampilDistribusi = role != model.type.Role.Produksi
+                    && !"Produksi".equalsIgnoreCase(jenisLaporan);
+            jPanel14.setVisible(tampilDistribusi);
+            jPanel13.setVisible(true);
+
             jLabel34.setText("Keterangan Stok");
             jLabel35.setText("Batas minimum stok");
             jLabel36.setText("—");
             jLabel37.setText("Tidak dicatat");
             jLabel38.setText("Belum dihitung");
             jLabel20.setText("<html><div style='width:220px'>Database belum menyimpan batas minimum stok. Status stok menipis belum dapat dihitung.</div></html>");
-            jLabel17.setText("Periode " + range[0] + " sampai " + range[1]);
+
+            boolean tidakAdaData = "Produksi".equalsIgnoreCase(jenisLaporan)
+                    ? jumlahProduksiCocok == 0
+                    : "Distribusi".equalsIgnoreCase(jenisLaporan)
+                        ? jumlahRincianDistribusi == 0
+                        : jumlahProduksiCocok == 0 && jumlahRincianDistribusi == 0;
+            if (tidakAdaData) {
+                jLabel17.setText("Tidak ada baris data yang sesuai dengan periode dan filter yang dipilih.");
+            } else {
+                jLabel17.setText("Periode " + range[0] + " sampai " + range[1]
+                        + " | " + jumlahProduksiCocok + " produksi selesai"
+                        + " | " + jumlahRincianDistribusi + " rincian distribusi");
+            }
+            jPanel2.revalidate();
+            jPanel2.repaint();
         } catch (RuntimeException ex) { ViewHelper.error(this, ex); }
+    }
+
+    private void siapkanFilterLaporan() {
+        javax.swing.JLabel labelStatus = new javax.swing.JLabel("Status Transaksi");
+        labelStatus.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+        jLabel30.setText("Periode");
+        jLabel31.setText("Jenis Laporan");
+        jLabel32.setText("Produk");
+
+        jPanel11.removeAll();
+        jPanel11.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel11.add(jLabel16, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 14, 180, 20));
+        jPanel11.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 38, 900, 20));
+        jPanel11.add(jLabel29, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 68, 140, 18));
+        jPanel11.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 88, 150, 32));
+        jPanel11.add(jLabel30, new org.netbeans.lib.awtextra.AbsoluteConstraints(185, 68, 140, 18));
+        jPanel11.add(jComboBox1, new org.netbeans.lib.awtextra.AbsoluteConstraints(185, 88, 135, 32));
+        jPanel11.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(335, 68, 150, 18));
+        jPanel11.add(jComboBox2, new org.netbeans.lib.awtextra.AbsoluteConstraints(335, 88, 150, 32));
+        jPanel11.add(jLabel32, new org.netbeans.lib.awtextra.AbsoluteConstraints(500, 68, 170, 18));
+        jPanel11.add(jComboBox3, new org.netbeans.lib.awtextra.AbsoluteConstraints(500, 88, 180, 32));
+        jPanel11.add(labelStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(695, 68, 150, 18));
+        jPanel11.add(jComboBox4, new org.netbeans.lib.awtextra.AbsoluteConstraints(695, 88, 150, 32));
+        jPanel11.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(860, 88, 130, 32));
+        jPanel11.revalidate();
+        jPanel11.repaint();
     }
 
     private model.type.JenisProduk jenisDariNama(String nama) {
@@ -203,6 +252,7 @@ public class PantauLaporanForm extends javax.swing.JFrame {
         jLabel31 = new javax.swing.JLabel();
         jLabel32 = new javax.swing.JLabel();
         jComboBox3 = new javax.swing.JComboBox<>();
+        jComboBox4 = new javax.swing.JComboBox<>();
         jButton2 = new javax.swing.JButton();
         jPanel13 = new javax.swing.JPanel();
         jLabel28 = new javax.swing.JLabel();
@@ -591,6 +641,7 @@ public class PantauLaporanForm extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JComboBox<String> jComboBox2;
     private javax.swing.JComboBox<String> jComboBox3;
+    private javax.swing.JComboBox<String> jComboBox4;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;

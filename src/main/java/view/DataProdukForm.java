@@ -34,12 +34,13 @@ public class DataProdukForm extends javax.swing.JFrame {
         model.type.Role role = akunController.getPetugasAktif().getRole();
 
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jTextField3.setText("");
         jTextField2.setEditable(false); // ID produk tidak boleh berubah.
         jTextField5.setEditable(false); // Kemasan mengikuti data produksi.
-        jTextField7.setEditable(false); // Nama produk mengikuti jenis produk.
+        jTextField7.setEditable(role == model.type.Role.Admin || role == model.type.Role.Gudang);
         jTextField5.setToolTipText("Isi kemasan mengikuti spesifikasi produksi dan tidak dapat diubah dari halaman ini.");
-        jTextField7.setToolTipText("Nama produk mengikuti jenis produk dan tidak dapat diubah dari halaman ini.");
+        jTextField7.setToolTipText("Nama produk dapat diubah oleh Admin atau petugas Gudang selama produk belum dialokasikan.");
         jComboBox2.setEnabled(false);
         jComboBox3.setEnabled(false);
         jComboBox4.setEnabled(false);
@@ -62,8 +63,9 @@ public class DataProdukForm extends javax.swing.JFrame {
         ViewHelper.pasangTombol(jButton11, e -> ViewHelper.logout(this, sistemController));
 
         boolean bolehUbah = role == model.type.Role.Admin || role == model.type.Role.Gudang;
-        jButton4.setVisible(ViewHelper.bolehAkses(role, "AGEN"));
+        jButton4.setVisible(false);
         jTextField6.setEditable(bolehUbah);
+        jTextField7.setEditable(bolehUbah);
         jButton10.setEnabled(bolehUbah);
 
         jTable1.getSelectionModel().addListSelectionListener(e -> {
@@ -129,11 +131,13 @@ public class DataProdukForm extends javax.swing.JFrame {
         jTextField7.setText(p.getNamaProduk());
         jComboBox2.setSelectedItem(p.getJenisProduk().isBotol() ? "Botol" : "Galon");
         jComboBox3.setSelectedItem(p.getSatuanJual());
-        jComboBox4.setSelectedItem(p.getIdDistribusi() == null ? "Aktif" : "Dialokasikan");
+        jComboBox4.setSelectedItem(p.getIdDistribusi() == null ? "Tersedia" : "Dialokasikan");
         boolean bolehUbah = akunController.getPetugasAktif().getRole() == model.type.Role.Admin
                 || akunController.getPetugasAktif().getRole() == model.type.Role.Gudang;
-        jTextField6.setEditable(bolehUbah);
-        jButton10.setEnabled(bolehUbah);
+        boolean produkTersedia = p.getIdDistribusi() == null;
+        jTextField6.setEditable(bolehUbah && produkTersedia);
+        jTextField7.setEditable(bolehUbah && produkTersedia);
+        jButton10.setEnabled(bolehUbah && produkTersedia);
     }
 
     private void simpanPerubahanProduk() {
@@ -142,11 +146,12 @@ public class DataProdukForm extends javax.swing.JFrame {
             ViewHelper.info(this, "Pilih produk dari tabel terlebih dahulu.");
             return;
         }
-        if (!ViewHelper.konfirmasi(this, "Simpan perubahan harga satuan produk?")) return;
+        if (!ViewHelper.konfirmasi(this, "Simpan perubahan nama dan harga satuan produk?")) return;
         try {
-            sistemController.getProdukController().ubahHargaProduk(p.getIdProduk(), jTextField6.getText());
+            sistemController.getProdukController().ubahNamaDanHargaProduk(
+                    p.getIdProduk(), jTextField7.getText(), jTextField6.getText());
             muatProduk();
-            ViewHelper.info(this, "Harga satuan produk berhasil diperbarui.");
+            ViewHelper.info(this, "Nama dan harga satuan produk berhasil diperbarui.");
         } catch (RuntimeException ex) { ViewHelper.error(this, ex); }
     }
 
@@ -175,10 +180,12 @@ public class DataProdukForm extends javax.swing.JFrame {
         jTextField6.setText("");
         jTextField7.setText("");
         jTable1.clearSelection();
-        jTextField6.setEditable(akunController != null
+        boolean bolehUbah = akunController != null
                 && (akunController.getPetugasAktif().getRole() == model.type.Role.Admin
-                || akunController.getPetugasAktif().getRole() == model.type.Role.Gudang));
-        jButton10.setEnabled(jTextField6.isEditable());
+                || akunController.getPetugasAktif().getRole() == model.type.Role.Gudang);
+        jTextField6.setEditable(bolehUbah);
+        jTextField7.setEditable(bolehUbah);
+        jButton10.setEnabled(bolehUbah);
     }
 
     public void refreshData() { muatProduk(); }

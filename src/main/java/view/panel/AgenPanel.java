@@ -28,6 +28,9 @@ public class AgenPanel extends JPanel {
     private final javax.swing.JComboBox<String> kecamatan = new javax.swing.JComboBox<>(new String[]{
         "Semua Kecamatan", "Palaran", "Samarinda Ilir", "Samarinda Kota",
         "Samarinda Utara", "Samarinda Ulu", "Sungai Kunjang"});
+    private final javax.swing.JComboBox<String> kecamatanInput = new javax.swing.JComboBox<>(new String[]{
+        "Palaran", "Samarinda Ilir", "Samarinda Kota",
+        "Samarinda Utara", "Samarinda Ulu", "Sungai Kunjang"});
 
     private final DefaultTableModel model = new DefaultTableModel(
             new String[]{"ID Agen", "Nama Agen", "No. Telepon", "Alamat Lengkap"}, 0) {
@@ -47,7 +50,8 @@ public class AgenPanel extends JPanel {
         form.add(new JLabel("ID agen (otomatis)")); form.add(id);
         form.add(new JLabel("Nama agen")); form.add(nama);
         form.add(new JLabel("Nomor telepon")); form.add(telepon);
-        form.add(new JLabel("Alamat lengkap")); form.add(alamat);
+        form.add(new JLabel("Alamat jalan")); form.add(alamat);
+        form.add(new JLabel("Kecamatan")); form.add(kecamatanInput);
         JPanel areaAtas = new JPanel(new BorderLayout(6, 6));
         JPanel filter = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         filter.add(new JLabel("Cari agen:"));
@@ -83,7 +87,8 @@ public class AgenPanel extends JPanel {
         tambah.addActionListener(e -> {
             if (!konfirmasi("Simpan data agen baru?")) return;
             jalankan(() -> {
-                Agen baru = controller.simpanAgen(nama.getText(), telepon.getText(), alamat.getText());
+                Agen baru = controller.simpanAgen(
+                        nama.getText(), telepon.getText(), alamatLengkapDenganKecamatan());
                 id.setText(baru.getIdAgen());
             });
         });
@@ -95,7 +100,8 @@ public class AgenPanel extends JPanel {
             }
             if (!konfirmasi("Simpan perubahan data agen ini?")) return;
             jalankan(() -> controller.ubahAgen(
-                    id.getText().trim(), nama.getText(), telepon.getText(), alamat.getText()));
+                    id.getText().trim(), nama.getText(), telepon.getText(),
+                    alamatLengkapDenganKecamatan()));
         });
 
         hapus.addActionListener(e -> {
@@ -117,6 +123,10 @@ public class AgenPanel extends JPanel {
                 nama.setText(String.valueOf(model.getValueAt(row, 1)));
                 telepon.setText(String.valueOf(model.getValueAt(row, 2)));
                 alamat.setText(String.valueOf(model.getValueAt(row, 3)));
+                Agen agenTerpilih = controller.cariAgen(String.valueOf(model.getValueAt(row, 0)));
+                if (agenTerpilih != null && agenTerpilih.ambilKecamatan() != null) {
+                    kecamatanInput.setSelectedItem(agenTerpilih.ambilKecamatan());
+                }
             }
         });
         loadData();
@@ -151,24 +161,41 @@ public class AgenPanel extends JPanel {
         nama.setText("");
         telepon.setText("");
         alamat.setText("");
+        kecamatanInput.setSelectedIndex(0);
         tabel.clearSelection();
     }
 
+    private String alamatLengkapDenganKecamatan() {
+        String alamatDasar = alamat.getText().trim();
+        if (alamatDasar.isBlank()) {
+            throw new IllegalArgumentException("Alamat jalan wajib diisi.");
+        }
+        // Hilangkan kecamatan lama ketika data agen diedit, lalu gunakan pilihan terbaru.
+        alamatDasar = alamatDasar.replaceAll("(?i),?\\s*Kec\\.\\s*[^,]+", "");
+        alamatDasar = alamatDasar.replaceAll("(?i),?\\s*Samarinda\\s*$", "").trim();
+        String wilayah = String.valueOf(kecamatanInput.getSelectedItem());
+        return alamatDasar + ", Kec. " + wilayah + ", Samarinda";
+    }
+
     private void loadData() {
-        model.setRowCount(0);
-        String cari = pencarian.getText().trim();
-        String wilayah = String.valueOf(kecamatan.getSelectedItem());
-        List<Agen> data = (!cari.isBlank() && !"Semua Kecamatan".equals(wilayah))
-                ? controller.cariAgen(cari, wilayah) : controller.loadAgen();
-        for (Agen agen : data) {
-            boolean cocokNama = cari.isBlank() || agen.getNamaAgen().toLowerCase(java.util.Locale.ROOT)
-                    .contains(cari.toLowerCase(java.util.Locale.ROOT));
-            boolean cocokWilayah = "Semua Kecamatan".equals(wilayah)
-                    || (agen.ambilKecamatan() != null && agen.ambilKecamatan().equalsIgnoreCase(wilayah));
-            if (cocokNama && cocokWilayah) {
-                model.addRow(new Object[]{agen.getIdAgen(), agen.getNamaAgen(),
-                        agen.getNoTelp(), agen.getAlamatLengkap()});
+        try {
+            model.setRowCount(0);
+            String cari = pencarian.getText().trim();
+            String wilayah = String.valueOf(kecamatan.getSelectedItem());
+            List<Agen> data = (!cari.isBlank() && !"Semua Kecamatan".equals(wilayah))
+                    ? controller.cariAgen(cari, wilayah) : controller.loadAgen();
+            for (Agen agen : data) {
+                boolean cocokNama = cari.isBlank() || agen.getNamaAgen().toLowerCase(java.util.Locale.ROOT)
+                        .contains(cari.toLowerCase(java.util.Locale.ROOT));
+                boolean cocokWilayah = "Semua Kecamatan".equals(wilayah)
+                        || (agen.ambilKecamatan() != null && agen.ambilKecamatan().equalsIgnoreCase(wilayah));
+                if (cocokNama && cocokWilayah) {
+                    model.addRow(new Object[]{agen.getIdAgen(), agen.getNamaAgen(),
+                            agen.getNoTelp(), agen.getAlamatLengkap()});
+                }
             }
+        } catch (RuntimeException ex) {
+            pesan(ex.getMessage(), JOptionPane.ERROR_MESSAGE);
         }
     }
 }

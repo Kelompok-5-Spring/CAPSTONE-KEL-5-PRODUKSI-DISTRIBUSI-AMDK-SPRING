@@ -33,6 +33,7 @@ public class DashboardGudangForm extends javax.swing.JFrame {
         this.sistemController = sistemController;
         this.akunController = sistemController.getAkunController();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel17.setText("Stok per " + java.time.LocalDate.now());
         jLabel19.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()
                 + ". Pantau stok dan mutasi produk jadi.");

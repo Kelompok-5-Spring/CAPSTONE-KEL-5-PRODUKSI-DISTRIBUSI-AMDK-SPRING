@@ -49,27 +49,38 @@ public class ProdukController {
         return dao.hitungProdukDenganStatus(jenis, status);
     }
 
-    /** Memperbarui harga tanpa mengubah identitas, jenis, kemasan, atau alokasi stok produk. */
-    public void ubahHargaProduk(String id, String harga) {
+    /** Memperbarui nama dan harga tanpa mengubah ID, jenis, kemasan, atau asal produksi. */
+    public void ubahNamaDanHargaProduk(String id, String nama, String harga) {
         akun.wajibRole(Role.Admin, Role.Gudang);
         String idValid = validasiKode(id, "ID produk", 15);
         Produk lama = dao.findById(idValid);
         if (lama == null) throw new IllegalArgumentException("Produk tidak ditemukan.");
+        if (lama.getIdDistribusi() != null) {
+            throw new IllegalArgumentException("Nama atau harga produk yang sudah dialokasikan ke distribusi tidak dapat diubah.");
+        }
+
+        String namaValid = validasiTeks(nama, "Nama produk", 2, 100);
         BigDecimal hargaValid = parseDesimalTidakNegatif(harga, "Harga satuan");
 
         Produk produkBaru;
         if (lama instanceof ProdukBotol botol) {
-            produkBaru = new ProdukBotol(lama.getIdProduk(), lama.getNamaProduk(), hargaValid,
-                    lama.getIdProduksi(), lama.getIdDistribusi(),
-                    botol.getVolumeMl(), botol.getPcsPerDus());
+            produkBaru = new ProdukBotol(lama.getIdProduk(), namaValid, hargaValid,
+                    lama.getIdProduksi(), null, botol.getVolumeMl(), botol.getPcsPerDus());
         } else if (lama instanceof ProdukGalon galon) {
-            produkBaru = new ProdukGalon(lama.getIdProduk(), lama.getNamaProduk(), hargaValid,
-                    lama.getIdProduksi(), lama.getIdDistribusi(),
-                    galon.getVolumeLiter(), galon.getJenisGalon());
+            produkBaru = new ProdukGalon(lama.getIdProduk(), namaValid, hargaValid,
+                    lama.getIdProduksi(), null, galon.getVolumeLiter(), galon.getJenisGalon());
         } else {
             throw new IllegalStateException("Jenis data produk tidak dikenali.");
         }
         dao.update(produkBaru);
+    }
+
+    /** Kompatibilitas untuk pemanggil lama yang hanya mengubah harga. */
+    public void ubahHargaProduk(String id, String harga) {
+        akun.wajibRole(Role.Admin, Role.Gudang);
+        Produk lama = dao.findById(validasiKode(id, "ID produk", 15));
+        if (lama == null) throw new IllegalArgumentException("Produk tidak ditemukan.");
+        ubahNamaDanHargaProduk(id, lama.getNamaProduk(), harga);
     }
 
     public void ubahProduk(String id, String nama, String harga,

@@ -17,6 +17,7 @@ public class StokGudangForm extends javax.swing.JFrame {
 
     public StokGudangForm() {
         initComponents();
+        ViewHelper.pasangScrollVertikal(this, jPanel2, 180, 0, 1100, 720, 760);
     }
 
     public StokGudangForm(controller.SistemController sistemController) {
@@ -33,6 +34,7 @@ public class StokGudangForm extends javax.swing.JFrame {
         this.akunController = sistemController.getAkunController();
         model.type.Role role = akunController.getPetugasAktif().getRole();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel19.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()
                 + ". Pantau stok masuk, stok keluar, dan ketersediaan produk.");
         jTextField1.setText("");
@@ -48,8 +50,6 @@ public class StokGudangForm extends javax.swing.JFrame {
         ViewHelper.pasangTombol(jButton8, e -> ViewHelper.buka(this, sistemController, "LAPORAN"));
         ViewHelper.pasangTombol(jButton2, e -> ViewHelper.logout(this, sistemController));
         jButton6.setVisible(false); // Komponen duplikat dari form lama, dipertahankan agar struktur NetBeans tetap utuh.
-        ViewHelper.tambahTombolKembali(jPanel1, this, sistemController, 290);
-
         jTextField1.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { muatStok(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { muatStok(); }

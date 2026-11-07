@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FlowLayout;
+import java.awt.Dimension;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -51,19 +54,30 @@ public class DataAgenForm extends JFrame {
             javax.swing.SwingUtilities.invokeLater(panelAgen::fokusTambahAgen);
         }
 
-        JPanel bawah = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton kembali = new JButton("Kembali");
-        JButton dashboard = new JButton("Dashboard");
-        JButton produk = new JButton("Data Produk");
-        JButton laporan = new JButton("Laporan");
-        JButton keluar = new JButton("Logout");
-        kembali.addActionListener(e -> ViewHelper.kembali(this, sistem));
-        dashboard.addActionListener(e -> ViewHelper.bukaDashboard(this, sistem));
-        produk.setVisible(ViewHelper.bolehAkses(role, "PRODUK"));
-        produk.addActionListener(e -> ViewHelper.buka(this, sistem, "PRODUK"));
-        laporan.addActionListener(e -> ViewHelper.buka(this, sistem, "LAPORAN"));
-        keluar.addActionListener(e -> ViewHelper.logout(this, sistem));
-        bawah.add(kembali); bawah.add(dashboard); bawah.add(produk); bawah.add(laporan); bawah.add(keluar);
-        add(bawah, BorderLayout.SOUTH);
+        JPanel sidebar = new JPanel(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        sidebar.setPreferredSize(new Dimension(180, 700));
+        sidebar.setBackground(new Color(0, 105, 148));
+
+        JLabel logo = new JLabel();
+        java.net.URL logoUrl = getClass().getResource("/images/Spring Logo with Swirl Emblem (2).png");
+        if (logoUrl != null) {
+            ImageIcon icon = new ImageIcon(logoUrl);
+            Image gambar = icon.getImage().getScaledInstance(128, 48, Image.SCALE_SMOOTH);
+            logo.setIcon(new ImageIcon(gambar));
+        }
+        sidebar.add(logo, new org.netbeans.lib.awtextra.AbsoluteConstraints(24, 20, 132, 48));
+
+        JLabel brand = new JLabel("Operasional");
+        brand.setFont(new Font("Arial", Font.BOLD, 13));
+        brand.setForeground(Color.WHITE);
+        sidebar.add(brand, new org.netbeans.lib.awtextra.AbsoluteConstraints(35, 70, 120, 20));
+
+        JLabel footer = new JLabel("Spring Operasional");
+        footer.setFont(new Font("Arial", Font.BOLD, 11));
+        footer.setForeground(Color.WHITE);
+        sidebar.add(footer, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, 660, 145, 20));
+
+        add(sidebar, BorderLayout.WEST);
+        ViewHelper.pasangSidebarStandar(sidebar, this, sistem);
     }
 }

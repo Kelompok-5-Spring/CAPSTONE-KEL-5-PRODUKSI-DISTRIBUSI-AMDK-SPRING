@@ -2,6 +2,9 @@ package view;
 
 import controller.SistemController;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -10,14 +13,14 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import java.awt.Font;
-import java.awt.Color;
 import java.awt.Cursor;
 import javax.swing.AbstractButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.JScrollPane;
+import javax.swing.BorderFactory;
 import model.Petugas;
 import model.PetugasAdmin;
 import model.PetugasDistribusi;
@@ -256,6 +259,104 @@ public final class ViewHelper {
             case "AKUN": case "TAMBAH_PRODUK": return false;
             default: return tujuan.equals("LOGIN");
         }
+    }
+
+
+    /**
+     * Menyamakan urutan navigasi pada seluruh halaman tanpa menghapus komponen
+     * hasil drag-and-drop NetBeans. Tombol lama disembunyikan, lalu navigasi
+     * standar ditambahkan dengan urutan dan posisi yang sama.
+     */
+    public static void pasangSidebarStandar(JPanel sidebar, JFrame asal, SistemController sistem) {
+        if (sidebar == null || sistem == null) return;
+        Role role = petugasAktif(sistem).getRole();
+
+        for (Component komponen : sidebar.getComponents()) {
+            if (komponen instanceof AbstractButton) {
+                komponen.setVisible(false);
+            } else if (komponen instanceof JLabel label) {
+                String teks = label.getText() == null ? "" : label.getText().trim();
+                int y = label.getY();
+                if (y > 100 && y < 640
+                        && (teks.equalsIgnoreCase("Data")
+                        || teks.equalsIgnoreCase("Operasional")
+                        || teks.equalsIgnoreCase("Administrasi"))) {
+                    label.setVisible(false);
+                }
+            }
+        }
+
+        tambahJudulSidebar(sidebar, "DATA", 170);
+        tambahJudulSidebar(sidebar, "OPERASIONAL", 270);
+        tambahJudulSidebar(sidebar, "ADMINISTRASI", 407);
+
+        tambahMenuSidebar(sidebar, asal, sistem, "Dashboard", "DASHBOARD", 120, true);
+        tambahMenuSidebar(sidebar, asal, sistem, "Data Produk", "PRODUK", 190,
+                bolehAkses(role, "PRODUK"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Data Agen", "AGEN", 225,
+                bolehAkses(role, "AGEN"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Kelola Produksi", "PRODUKSI", 292,
+                bolehAkses(role, "PRODUKSI"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Stok Gudang", "STOK", 327,
+                bolehAkses(role, "STOK"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Distribusi", "DISTRIBUSI", 362,
+                bolehAkses(role, "DISTRIBUSI"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Akun Pengguna", "AKUN", 430,
+                bolehAkses(role, "AKUN"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Laporan", "LAPORAN", 465,
+                bolehAkses(role, "LAPORAN"));
+        tambahMenuSidebar(sidebar, asal, sistem, "Kembali", "KEMBALI", 520, true);
+        tambahMenuSidebar(sidebar, asal, sistem, "Logout", "LOGOUT", 555, true);
+
+        sidebar.revalidate();
+        sidebar.repaint();
+    }
+
+    private static void tambahJudulSidebar(JPanel sidebar, String teks, int y) {
+        JLabel label = new JLabel(teks);
+        label.setFont(new Font("Arial", Font.BOLD, 10));
+        label.setForeground(Color.WHITE);
+        sidebar.add(label, new org.netbeans.lib.awtextra.AbsoluteConstraints(28, y, 130, 18));
+    }
+
+    private static void tambahMenuSidebar(JPanel sidebar, JFrame asal,
+            SistemController sistem, String teks, String tujuan, int y, boolean terlihat) {
+        JButton tombol = new JButton(teks);
+        tombol.setFont(new Font("Arial", Font.BOLD, 12));
+        tombol.setForeground(new Color(0, 88, 125));
+        tombol.setBackground(Color.WHITE);
+        tombol.setOpaque(true);
+        tombol.setFocusPainted(false);
+        tombol.setBorder(BorderFactory.createLineBorder(new Color(185, 200, 210)));
+        tombol.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        tombol.setVisible(terlihat);
+        tombol.addActionListener(e -> {
+            switch (tujuan) {
+                case "DASHBOARD" -> bukaDashboard(asal, sistem);
+                case "KEMBALI" -> kembali(asal, sistem);
+                case "LOGOUT" -> logout(asal, sistem);
+                default -> buka(asal, sistem, tujuan);
+            }
+        });
+        sidebar.add(tombol, new org.netbeans.lib.awtextra.AbsoluteConstraints(18, y, 144, 30));
+    }
+
+    /** Membuat area isi halaman dapat digulir tanpa mengubah panel drag-and-drop. */
+    public static void pasangScrollVertikal(JFrame frame, JPanel konten,
+            int x, int y, int lebar, int tinggiViewport, int tinggiKonten) {
+        if (frame == null || konten == null) return;
+        java.awt.Container root = frame.getContentPane();
+        root.remove(konten);
+        konten.setPreferredSize(new Dimension(lebar, Math.max(tinggiKonten, tinggiViewport)));
+        JScrollPane scroll = new JScrollPane(konten);
+        scroll.setBorder(null);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.getVerticalScrollBar().setUnitIncrement(18);
+        root.add(scroll, new org.netbeans.lib.awtextra.AbsoluteConstraints(
+                x, y, lebar, tinggiViewport));
+        root.revalidate();
+        root.repaint();
     }
 
     public static void logout(JFrame asal, SistemController sistem) {

@@ -35,6 +35,7 @@ public class ManajemenDistribusiForm extends javax.swing.JFrame {
         model.type.Role role = akunController.getPetugasAktif().getRole();
 
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel36.setText("Kelola pengiriman sesuai wilayah dan hak akses akun.");
         jTextField1.setText(java.time.LocalDate.now().toString());
         jTextField2.setText("");
@@ -60,11 +61,9 @@ public class ManajemenDistribusiForm extends javax.swing.JFrame {
         ViewHelper.pasangTombol(jButton6, e -> kosongkanFormDistribusi());
         ViewHelper.pasangTombol(jButton9, e -> simpanAtauPerbaruiDistribusi());
         ViewHelper.pasangTombol(jButton2, e -> ViewHelper.logout(this, sistemController));
-        ViewHelper.tambahTombolKembali(jPanel1, this, sistemController, 410);
-
         boolean admin = role == model.type.Role.Admin;
         boolean distribusi = role == model.type.Role.Distribusi;
-        jButton10.setVisible(ViewHelper.bolehAkses(role, "STOK"));
+        jButton10.setVisible(false);
         jButton9.setEnabled(admin);
         jComboBox6.setEnabled(admin);
         jComboBox2.setEnabled(admin);
@@ -73,8 +72,16 @@ public class ManajemenDistribusiForm extends javax.swing.JFrame {
         jComboBox1.setEnabled(false);
         jButton6.setEnabled(admin);
 
+        jTable1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jTable1.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && jTable1.getSelectedRow() >= 0) isiFormDistribusi();
+        });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && jTable1.getSelectedRow() >= 0) {
+                    isiFormDistribusi();
+                }
+            }
         });
         jTextField3.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { muatDistribusi(); }
@@ -164,6 +171,10 @@ public class ManajemenDistribusiForm extends javax.swing.JFrame {
     private void muatDistribusi() {
         if (sistemController == null) return;
         try {
+            idDistribusiTerpilih = null;
+            jComboBox1.setEnabled(false);
+            jButton9.setEnabled(akunController.getPetugasAktif().getRole() == model.type.Role.Admin);
+            jButton9.setText("Simpan Distribusi");
             javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
                     new Object[]{"ID Distribusi", "Produk", "Agen", "Jumlah", "Tanggal", "Status"}, 0) {
                 @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -198,7 +209,9 @@ public class ManajemenDistribusiForm extends javax.swing.JFrame {
                 }
             }
             jTable1.setModel(m);
-            jLabel36.setText(totalDetail + " rincian pengiriman ditampilkan sesuai filter.");
+            jLabel36.setText(totalDetail == 0
+                    ? "Tidak ada baris data yang sesuai dengan filter. Silakan ubah pencarian atau pilihan filter."
+                    : totalDetail + " rincian pengiriman ditampilkan sesuai filter.");
         } catch (RuntimeException ex) { ViewHelper.error(this, ex); }
     }
 

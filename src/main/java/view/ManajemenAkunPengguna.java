@@ -14,6 +14,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(ManajemenAkunPengguna.class.getName());
     private controller.AkunController akunController;
     private controller.SistemController sistemController;
+    private boolean kontrolAkunTambahanDipasang;
 
     public ManajemenAkunPengguna() {
         initComponents();
@@ -33,6 +34,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         this.sistemController = sistemController;
         this.akunController = sistemController.getAkunController();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
 
         jTextField1.setText("");
         jTextField16.setText("");
@@ -42,6 +44,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         jTextField5.setText("");
         jTextField18.setToolTipText("Password minimal 8 karakter dan mengandung huruf serta angka.");
         jTextField5.setToolTipText("Kosongkan jika password tidak ingin diubah.");
+        pasangKontrolAkunTambahan();
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(
                 new String[]{"Admin", "Produksi", "Gudang", "Distribusi"}));
         jComboBox6.setModel(new javax.swing.DefaultComboBoxModel<>(
@@ -58,8 +61,6 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         ViewHelper.pasangTombol(jButton10, e -> ViewHelper.logout(this, sistemController));
         ViewHelper.pasangTombol(jButton12, e -> tambahAkun());
         ViewHelper.pasangTombol(jButton2, e -> ubahAkunTerpilih());
-        ViewHelper.tambahTombolKembali(jPanel1, this, sistemController, 540);
-
         jTable1.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && jTable1.getSelectedRow() >= 0) isiFormAkun();
         });
@@ -77,6 +78,36 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         jTable1.setComponentPopupMenu(menu);
         ViewHelper.pilihBarisSaatKlikKanan(jTable1);
         muatAkun();
+    }
+
+    private void pasangKontrolAkunTambahan() {
+        if (kontrolAkunTambahanDipasang) return;
+        kontrolAkunTambahanDipasang = true;
+
+        javax.swing.JCheckBox lihatPasswordUbah = new javax.swing.JCheckBox("Tampilkan");
+        lihatPasswordUbah.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 10));
+        lihatPasswordUbah.setOpaque(false);
+        lihatPasswordUbah.addActionListener(e ->
+                jTextField5.setEchoChar(lihatPasswordUbah.isSelected() ? (char) 0 : '*'));
+        jPanel5.add(lihatPasswordUbah,
+                new org.netbeans.lib.awtextra.AbsoluteConstraints(555, 103, 90, 28));
+
+        javax.swing.JCheckBox lihatPasswordTambah = new javax.swing.JCheckBox("Lihat");
+        lihatPasswordTambah.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 10));
+        lihatPasswordTambah.setOpaque(false);
+        lihatPasswordTambah.addActionListener(e ->
+                jTextField18.setEchoChar(lihatPasswordTambah.isSelected() ? (char) 0 : '*'));
+        jPanel2.add(lihatPasswordTambah,
+                new org.netbeans.lib.awtextra.AbsoluteConstraints(1030, 370, 65, 25));
+
+        javax.swing.JButton hapus = new javax.swing.JButton("Hapus Akun");
+        hapus.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+        hapus.setForeground(new java.awt.Color(255, 255, 255));
+        hapus.setBackground(new java.awt.Color(210, 35, 55));
+        hapus.setFocusPainted(false);
+        hapus.addActionListener(e -> hapusAkunTerpilih());
+        jPanel5.add(hapus,
+                new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 150, 30));
     }
 
     private void muatAkun() {
@@ -131,8 +162,8 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         if (!ViewHelper.konfirmasi(this, "Daftarkan akun pegawai baru?")) return;
         try {
             model.Petugas baru = akunController.simpanAkun(
-                    jTextField17.getText(), jTextField16.getText(), jTextField18.getText(),
-                    role, spesialisasi);
+                    jTextField17.getText(), jTextField16.getText(),
+                    new String(jTextField18.getPassword()), role, spesialisasi);
             jTextField16.setText("");
             jTextField17.setText("");
             jTextField18.setText("");
@@ -150,7 +181,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         if (!ViewHelper.konfirmasi(this, "Simpan perubahan username atau password akun ini?")) return;
         try {
             akunController.ubahAkun(lama.getIdPetugas(), jTextField19.getText(),
-                    lama.getNama(), jTextField5.getText(), lama.getRole(),
+                    lama.getNama(), new String(jTextField5.getPassword()), lama.getRole(),
                     ViewHelper.spesialisasi(lama));
             jTextField5.setText("");
             muatAkun();
@@ -208,7 +239,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         jPanel5 = new javax.swing.JPanel();
         jLabel31 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
-        jTextField5 = new javax.swing.JTextField();
+        jTextField5 = new javax.swing.JPasswordField();
         jLabel10 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
         jLabel42 = new javax.swing.JLabel();
@@ -226,7 +257,7 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
         jTextField16 = new javax.swing.JTextField();
         jLabel39 = new javax.swing.JLabel();
         jTextField17 = new javax.swing.JTextField();
-        jTextField18 = new javax.swing.JTextField();
+        jTextField18 = new javax.swing.JPasswordField();
         jLabel40 = new javax.swing.JLabel();
         jLabel41 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox<>();
@@ -629,8 +660,8 @@ public class ManajemenAkunPengguna extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField16;
     private javax.swing.JTextField jTextField17;
-    private javax.swing.JTextField jTextField18;
+    private javax.swing.JPasswordField jTextField18;
     private javax.swing.JTextField jTextField19;
-    private javax.swing.JTextField jTextField5;
+    private javax.swing.JPasswordField jTextField5;
     // End of variables declaration//GEN-END:variables
 }

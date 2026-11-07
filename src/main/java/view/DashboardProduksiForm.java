@@ -33,6 +33,7 @@ public class DashboardProduksiForm extends javax.swing.JFrame {
         this.sistemController = sistemController;
         this.akunController = sistemController.getAkunController();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         java.time.LocalDate hariIni = java.time.LocalDate.now();
         jLabel29.setText("Produksi: " + hariIni);
         jLabel27.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()

@@ -33,6 +33,7 @@ public class DashboardDistribusiForm extends javax.swing.JFrame {
         this.sistemController = sistemController;
         this.akunController = sistemController.getAkunController();
         ViewHelper.setHeader(jLabel53, jLabel54, jLabel55, sistemController);
+        ViewHelper.pasangSidebarStandar(jPanel1, this, sistemController);
         jLabel19.setText("Selamat datang, " + akunController.getPetugasAktif().getNama()
                 + ". Pantau pengiriman sesuai wilayah tugas Anda.");
         jLabel17.setText("Petugas: " + akunController.getPetugasAktif().getNama());
